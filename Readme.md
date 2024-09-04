@@ -1,4 +1,4 @@
-# Kidney-Disease-Classification-MLflow-DVC
+# Synthetic-data-Subject-Classification-MLflow-DVC
 
 
 ## Workflows
