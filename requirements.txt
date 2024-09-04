@@ -1,0 +1,23 @@
+datasets  
+huggingface_hub  
+requests  
+scikit-learn  
+tqdm  
+pandas
+langchain-groq
+dvc
+mlflow==2.2.2
+python-box==6.0.2
+pyYAML
+ensure==1.0.2
+types-PyYAML 
+langchain
+notebook
+numpy
+Flask 
+Flask-Cors
+nltk
+matplotlib
+pathlib
+joblib
+-e .
