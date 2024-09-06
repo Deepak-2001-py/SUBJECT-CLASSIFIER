@@ -20,16 +20,16 @@
 Clone the repository
 
 ```bash
-https://github.com/krishnaik06/Kidney-Disease-Classification-Deep-Learning-Project
+https://github.com/Deepak-2001-py/Subject-Classifier
 ```
 ### STEP 01- Create a conda environment after opening the repository
 
 ```bash
-conda create -n cnncls python=3.8 -y
+conda create -n cnncls python=3.12 -y
 ```
 
 ```bash
-conda activate cnncls
+python -m venv myvenv
 ```
 
 
@@ -57,8 +57,6 @@ open up you local host and port
 
 - [Documentation](https://mlflow.org/docs/latest/index.html)
 
-- [MLflow tutorial](https://youtu.be/qdcHHrsXA48?si=bD5vDS60akNphkem)
-
 ##### cmd
 - mlflow ui
 
@@ -73,7 +71,7 @@ Run this to export as env variables:
 
 ```bash
 
-export MLFLOW_TRACKING_URI=https://dagshub.com/entbappy/Kidney-Disease-Classification-MLflow-DVC.mlflow
+export MLFLOW_TRACKING_URI=https://dagshub.com/Deepak-2001-py/Subject-Classifier.mlflow
 
 export MLFLOW_TRACKING_USERNAME=entbappy 
 
