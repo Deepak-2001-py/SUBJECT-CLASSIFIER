@@ -20,4 +20,8 @@ nltk
 matplotlib
 pathlib
 joblib
+langchain-community
+torch
+llama-cpp-python
+--extra-index-url=https://pypi.nvidia.com \cudf-cu12==24.8.* dask-cudf-cu12==24.8.* cuml-cu12==24.8.*
 -e .
