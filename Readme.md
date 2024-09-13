@@ -13,7 +13,8 @@
 8. Update the main.py
 9. Update the dvc.yaml
 10. app.py
-
+### datasets : 05deepak/my-dataset
+### clsssifier model repo : 05deepak/subject_classifeir_lora_modelv3_GGuf_Q_4
 # How to run?
 ### STEPS:
 
