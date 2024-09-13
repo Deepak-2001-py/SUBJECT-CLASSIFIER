@@ -1,146 +1,135 @@
 
-import os 
-from src.SubjectClassifier import logger
-from src.SubjectClassifier.utils.common import get_size
-from src.SubjectClassifier.entity.config_entity import (DataIngestionConfig)
+    
+import os
+import itertools
+import time
+import json
+import pandas as pd
+import warnings
 from dotenv import load_dotenv
+from typing import List
+from pydantic import BaseModel, Field
 from langchain_groq import ChatGroq
-# libereies importing
 from langchain.output_parsers import StructuredOutputParser
-# from langchain.schema import StructuredOutput
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.utils.openai_functions import convert_pydantic_to_openai_function
-from langchain.prompts import ChatPromptTemplate
-from typing import List
-from pydantic import BaseModel, Field
-import json
-import warnings
+from src.SubjectClassifier import logger
+from src.SubjectClassifier.utils.common import get_size
+from src.SubjectClassifier.entity.config_entity import DataIngestionConfig
+
 warnings.filterwarnings("ignore")
-# function for flatten and deduplicate sentences
-import itertools
-import time
-import pandas as pd
+
 # Function to flatten and deduplicate sentences
 def flatten_and_deduplicate(sentences):
     return list(set(
-    itertools.chain.from_iterable(
-        [d["sentence"] if isinstance(d, dict) and "sentence" in d else d for d in sublist]
-        for sublist in sentences if isinstance(sublist, list) )
-))
-load_dotenv()
-llm=ChatGroq(model="llama3-70b-8192")
-class Sentences(BaseModel):
-    """Call this with an to get the list  of sentences form given topic with subtopic"""
-    sentences_list: List = Field(description="list of sentences for given topic with subtopic provide list of string")
-    
-    
-    
-class DataIngestion:
-    def __init__(self, config = DataIngestionConfig):
-        self.config = config
-        
-
-    def flatten_and_deduplicate(self,sentences):
-        return list(set(
         itertools.chain.from_iterable(
             [d["sentence"] if isinstance(d, dict) and "sentence" in d else d for d in sublist]
-            for sublist in sentences if isinstance(sublist, list) )
-    ))   
-        
-    def generate_sentences(self,topic:str,num_sentences:int,subtopic:str):
-        #for topics with subtopics sentence creation
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant designed to output list of sentences of provided topic with subtopic."},
+            for sublist in sentences if isinstance(sublist, list)
+        )
+    ))
 
+load_dotenv()
+llm = ChatGroq(model="llama3-70b-8192")
+
+class Sentences(BaseModel):
+    """Schema for generating a list of sentences from a given topic with subtopics."""
+    sentences_list: List[str] = Field(description="List of sentences for a given topic with subtopic.")
+
+class DataIngestion:
+    def __init__(self, config: DataIngestionConfig):
+        self.config = config
+
+    def generate_sentences(self, topic: str, num_sentences: int, subtopic: str):
+        """Generates sentences for a given topic and subtopic."""
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant designed to output a list of sentences for a provided topic and subtopic."},
         ]
 
-
-        generate_subtopics_function=convert_pydantic_to_openai_function(Sentences)
+        # Define function conversion for structured output
+        generate_subtopics_function = convert_pydantic_to_openai_function(Sentences)
 
         # Define the prompt template with placeholders
-        prompt_template = PromptTemplate(messages=messages,
-            input_variables=["topic", "num_sentences","subtopic"],
-            template="generate list of {num_sentences} sentences for given topic:{topic} with subtopic:{subtopic} only provide list of sentences",
+        prompt_template = PromptTemplate(
+            messages=messages,
+            input_variables=["topic", "num_sentences", "subtopic"],
+            template="Generate a list of {num_sentences} sentences for the topic: {topic} with subtopic: {subtopic}. Provide only a list of sentences.",
         )
 
-        # Create an LLMChain
-        model_forced_function = llm.bind(functions=[generate_subtopics_function], function_call={"name":"Sentences"})
+        # Create an LLMChain and invoke the chain
+        model_forced_function = llm.bind(functions=[generate_subtopics_function], function_call={"name": "Sentences"})
         chain = prompt_template | model_forced_function
+        response = chain.invoke({"topic": topic, "num_sentences": num_sentences, "subtopic": subtopic})
 
-
-        # Run the chain to get the structured output
-        response= chain.invoke({"topic": topic, "num_sentences": num_sentences,"subtopic":subtopic})
-
-        # Extract the subtopics from the structured output
-        data_str=response.additional_kwargs.get("function_call").get("arguments")
+        # Extract and return sentences from response
+        data_str = response.additional_kwargs.get("function_call").get("arguments")
         data_dict = json.loads(data_str)
-
-        # Extract the list from the dictionary
         return data_dict["sentences_list"]
 
-
     def synthetic_data(self):
-        # creating  senetence dictionary using created 30 subjects ,subtoptopics_dictionary
+        """Generates synthetic data for 30 subjects and subtopics and saves the sentences in a dictionary."""
+        # Load subtopics dictionary
         with open(self.config.subtopics_dict, 'r') as f:
-            subtopics_dict= json.load(f)
-        logger.info(f"subtopics_dictloaded sucessfully !")
-        sentences_dict={}
+            subtopics_dict = json.load(f)
+        logger.info("Subtopics dictionary loaded successfully!")
 
-        
-        # Populate the dictionary for upto 30 topics
-        for topic in list(subtopics_dict.keys())[0:10]:
-            api_calls=0
-            if topic not in sentences_dict.keys():
-               sentences_dict[topic] = []
+        sentences_dict = {}
+
+        # Iterate through topics and subtopics
+        for topic in list(subtopics_dict.keys())[:10]:
+            api_calls = 0
+            sentences_dict[topic] = []
             try:
-                for subtopic in subtopics_dict[topic][:1]:
-                    
-                        x=time.time()
-                        generated_sentences = self.generate_sentences(topic,10,subtopic)
+                for subtopic in subtopics_dict[topic][:100]:
+                    start_time = time.time()
 
-                        # Only append if unique subtopics are added
-                        if generated_sentences :
-                            sentences_dict[topic].append(generated_sentences)
-                            api_calls+=1
+                    generated_sentences = self.generate_sentences(topic, 10, subtopic)
+                    api_calls += 1
 
-                        # Check and re-generate if less than 10 sentences
-                        if len(generated_sentences) < 10:
-                            additional_sentences =self.generate_sentences(topic,10,subtopic)
-                            api_calls+=1
-                            if additional_sentences:
-                                sentences_dict[topic].append(additional_sentences)
-                time_taken=time.time()-x
-                
-                logger.info(f"time taken for {topic} Sentences creation :{time_taken}")
-                logger.info(f"api call taken for {topic} Sentences creation :{api_calls}")
+                    if generated_sentences:
+                        sentences_dict[topic].append(generated_sentences)
+
+                    # Ensure a minimum of 10 sentences
+                    if len(generated_sentences) < 10:
+                        additional_sentences = self.generate_sentences(topic, 10, subtopic)
+                        api_calls += 1
+                        if additional_sentences:
+                            sentences_dict[topic].append(additional_sentences)
+
+                    time_taken = time.time() - start_time
+                    logger.info(f"Time taken for {topic}: {time_taken:.2f}s, API calls: {api_calls}")
+
             except Exception as e:
-                logger.info(f"Error generating sentences for subtopic '{topic}': {str(e)}")
+                logger.error(f"Error generating sentences for {topic}: {e}")
                 continue
-            sentences_dict[topic] = flatten_and_deduplicate(sentences_dict[topic])
 
-            logger.info(f"{topic}:\n{len(sentences_dict[topic])}\n")
-        path=os.path.join(self.config.sentences_dict)
-        with open(path,"w") as f:
-            json.dump(sentences_dict,f)
-        logger.info(f"sentences_dict saved to : {path}")
-        
+            # Flatten and deduplicate sentences
+            sentences_dict[topic] = flatten_and_deduplicate(sentences_dict[topic])
+            logger.info(f"{topic} - {len(sentences_dict[topic])} sentences generated.")
+
+        # Save the generated sentences dictionary to a file
+        path = os.path.join(self.config.sentences_dict)
+        with open(path, "w") as f:
+            json.dump(sentences_dict, f)
+        logger.info(f"Sentences dictionary saved to: {path}")
+
     def convert_to_dataframe(self):
-        
-        with open(self.config.sentences_dict,"r") as f:
-            sentences_dict=json.load(f)
-        dataset={}
-        dataset["sentence"]=[]
-        dataset["subject"]=[]
-        for i in sentences_dict.keys():
-            for j in sentences_dict[i]:
-                dataset["sentence"].append(j)
-                dataset["subject"].append(i)
-            
-        dataset1=pd.DataFrame(dataset)
-        path=os.path.join(self.config.local_data_file)
-        sample_data=dataset1.sample(self.config.sample_num,random_state=42)
-        #saving data to the local in csv format
-        sample_data.to_csv(path,index=False)
-        logger.info(f"sample_data saved to : {path}")
-    
+        """Converts the generated sentences into a DataFrame and saves it as a CSV."""
+        # Load sentences dictionary
+        with open(self.config.sentences_dict, "r") as f:
+            sentences_dict = json.load(f)
+
+        dataset = {"sentence": [], "subject": []}
+
+        # Prepare the dataset
+        for subject, sentences in sentences_dict.items():
+            for sentence in sentences:
+                dataset["sentence"].append(sentence)
+                dataset["subject"].append(subject)
+
+        # Create DataFrame and save as CSV
+        dataset_df = pd.DataFrame(dataset)
+        sample_data = dataset_df.sample(self.config.sample_num, random_state=42)
+        path = os.path.join(self.config.local_data_file)
+        sample_data.to_csv(path, index=False)
+        logger.info(f"Sampled data saved to: {path}")

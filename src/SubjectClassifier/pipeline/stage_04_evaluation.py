@@ -1,7 +1,7 @@
 from src.SubjectClassifier.config.configuration import ConfigurationManager
 from src.SubjectClassifier.components.Evaluation import Evaluation
 from src.SubjectClassifier import logger
-
+# from src.SubjectClassifier.components.Cuml_Evaluation import Evaluation
 
 class Evaluationpipeline:
     def __init__(self):
@@ -12,7 +12,8 @@ class Evaluationpipeline:
         evaluation_config = config.get_evaluation_config()
         evaluation = Evaluation(config=evaluation_config)
         evaluation.evaluation()
-        evaluation.save_score()
+        result=evaluation.save_score()
+        return result
         # evaluation.log_into_mlflow()
       
     

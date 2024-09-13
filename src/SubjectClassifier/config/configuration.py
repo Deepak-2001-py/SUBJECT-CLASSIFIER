@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from src.SubjectClassifier.utils.common import read_yaml, create_directories
 from src.SubjectClassifier.entity.config_entity import (DataIngestionConfig,
+                                                        PrepareFinetuneConfig,
                                                 # PrepareBaseModelConfig,
                                                 # PrepareCallbacksConfig,
                                                 TrainingConfig,
@@ -80,7 +81,16 @@ class ConfigurationManager:
         )
 
         return training_config
-    
+
+    def get_fintune_model_config(self) -> PrepareFinetuneConfig:
+        create_directories([Path(self.config.prepare_finetune_model.root_dir)])
+        model_config = PrepareFinetuneConfig(
+            fintune_model_path=Path(self.config.prepare_finetune_model.fintune_model_path),
+            root_dir=Path(self.config.prepare_finetune_model.root_dir),
+            model_repo=self.config.prepare_finetune_model.model_repo,
+            model_filename=self.config.prepare_finetune_model.model_filename,
+        )
+        return model_config 
 
 
 

@@ -10,11 +10,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import LinearSVC, SVC
 from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, AdaBoostClassifier, VotingClassifier
-from sklearn.model_selection import KFold
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_score, f1_score, recall_score
-from sklearn.model_selection import cross_val_score, cross_val_predict
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import  VotingClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
@@ -122,13 +119,7 @@ class Training:
         x_train_tfidf = pipeline.fit_transform(x_train)
         x_test_tfidf = pipeline.transform(x_test)
         
-        # Address the n_splits warning by adjusting StratifiedKFold
-        # skf = StratifiedKFold(n_splits=3)  # Adjust n_splits based on your data
 
-        # # Example: Using cross-validation with the adjusted StratifiedKFold
-        # for train_index, test_index in skf.split(x_train_tfidf, y_train):
-        #     X_train_fold, X_test_fold = x_train_tfidf.iloc[train_index], x_train_tfidf.iloc[test_index]
-        #     y_train_fold, y_test_fold = y_train[train_index], y_train[test_index] 
             
             
         #eval data

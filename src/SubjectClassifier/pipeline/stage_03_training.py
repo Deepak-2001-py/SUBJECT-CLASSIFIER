@@ -1,7 +1,7 @@
 from src.SubjectClassifier.config.configuration import ConfigurationManager
 from src.SubjectClassifier.components.Trainng import Training
 from src.SubjectClassifier import logger
-
+# from src.SubjectClassifier.components.Cuml_Training import Training
 
 class Trainingpipeline:
     def __init__(self):

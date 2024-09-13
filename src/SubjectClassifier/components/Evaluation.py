@@ -21,60 +21,12 @@ class Evaluation:
         self.grid_search = None
 
 
-    # def evaluation(self):
-    #     # Define models
-    #     ec=joblib.load(self.config.trained_model_path)
-    #     x_train_tfidf=pd.read_csv(os.path.join(self.config.train_data,"X_traintfidf_data.csv"))
-    #     x_test_tfidf=pd.read_csv(os.path.join(self.config.eval_data,"X_testtfidf_data.csv"))
-    #     y_train=pd.read_csv(os.path.join(self.config.train_data,"y_train_data.csv"))
-    #     y_test=pd.read_csv(os.path.join(self.config.eval_data,"y_test_data.csv"))
-    #     logger.info("loaded all the train ,test file sucessfully")
-    #     # Make predictions
-    #     y_pred = ec.predict(x_test_tfidf)
-    #     y_test=pd.read_csv(os.path.join(self.config.eval_data,"y_test_data.csv"))
-        
-    #     # Calculate scores
-    #     self.accuracy = accuracy_score(self.config.y_test, y_pred)
-    #     self.classification_report = classification_report(y_test, y_pred)
-       
-    #     # Cross-validation
-    #     self.scores = cross_val_score(ec,x_train_tfidf,y_train, cv=10)
 
-    #     # Print results
-    #     print(f"Accuracy: {self.accuracy}")
-    #     print("Classification Report:\n", self.classification_report)
-    #     print("Cross-validated scores:", self.scores)
-
-    # def save_score(self):
-    #     scores = {
-    #         "accuracy": self.accuracy,
-    #         "classification_report": self.classification_report,
-    #         "cross_val_score_mean": self.scores.mean(),
-    #         "cross_val_score_std": self.scores.std()
-    #     }
-    #     if self.grid_search:
-    #         scores["best_params"] = self.grid_search.best_params_
-    #         scores["best_score"] = self.grid_search.best_score_
-        
-    #     path=Path("scores.json")
-    #     save_json(path, data=scores)
-    #     logger.info(f"saved scaores at {path}")
 
     def evaluation(self):
         # Load the trained model
         ec = joblib.load(self.config.trained_model_path)
-
-        # # Load the data
-        # x_train_tfidf = pd.read_csv(os.path.join(self.config.train_data, "X_traintfidf_data.csv"),index_col=0, header=0)
-        # x_test_tfidf = pd.read_csv(os.path.join(self.config.eval_data, "X_testtfidf_data.csv"), index_col=0,header=0)
-        # y_train = pd.read_csv(os.path.join(self.config.train_data, "y_train_data.csv"),index_col=0,header=0)
-        # y_test = pd.read_csv(os.path.join(self.config.eval_data, "y_test_data.csv"),index_col=0)
-        
-        # #reset the index of data frames
-        # x_train_tfidf = x_train_tfidf.reset_index(drop=True)
-        # x_test_tfidf = x_test_tfidf.reset_index(drop=True)
-        # y_train = y_train.reset_index(drop=True)
-        # y_test = np.asanyarray(y_test.reset_index(drop=True))
+        logger.info("Loaded the trained model successfully")
         
         # Load the data
         x_train_tfidf = pd.read_csv(os.path.join(self.config.train_data, "X_traintfidf_data.csv"), index_col=0, header=0)
@@ -146,6 +98,7 @@ class Evaluation:
         path = Path("scores.json")
         save_json(path, data=scores)
         logger.info(f"Saved scores at {path}")
+        return scores
 
     # def log_into_mlflow(self):
     #     mlflow.set_registry_uri(self.config.mlflow_uri)

@@ -31,7 +31,13 @@ class DataIngestionConfig:
 #     checkpoint_model_filepath: Path
 
 
-
+@dataclass(frozen=True)
+class PrepareFinetuneConfig:
+    root_dir: Path
+    fintune_model_path: Path
+    model_repo: str
+    model_filename: str
+    
 @dataclass(frozen=True)
 class TrainingConfig:
     root_dir: Path
